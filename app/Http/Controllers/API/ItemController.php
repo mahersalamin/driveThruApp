@@ -28,7 +28,7 @@ class ItemController extends Controller
 
     public function show(Item $item)
     {
-        return $item->load('category');
+        return $item->load('category', 'sizes');
     }
 
     public function update(UpdateItemRequest $request, Item $item)

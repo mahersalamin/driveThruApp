@@ -9,13 +9,29 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Notifications\NewOrderPlaced;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Request;
 
 class OrderController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        return Order::with('items.item')->orderByDesc('created_at')->get();
+        $query = Order::with('items.item');
+
+        if ($request->has('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->has('mobile')) {
+            $query->where('mobile', 'like', "%{$request->mobile}%");
+        }
+
+        if ($request->has('name')) {
+            $query->where('name', 'like', "%{$request->name}%");
+        }
+
+        return $query->orderByDesc('created_at')->get();
     }
+
 
     public function show($id)
     {
@@ -73,4 +89,35 @@ class OrderController extends Controller
             ]);
         });
     }
+
+    public function updateStatus(Request $request, $id)
+    {
+        $request->validate([
+            'status' => 'required|in:pending,in_progress,completed,cancelled',
+        ]);
+
+        $order = Order::findOrFail($id);
+        $order->status = $request->status;
+        $order->save();
+
+        return response()->json(['message' => 'Order status updated.']);
+    }
+
+    public function filterByStatus($status)
+    {
+        if (!in_array($status, ['pending', 'in_progress', 'completed', 'cancelled'])) {
+            return response()->json(['message' => 'Invalid status'], 400);
+        }
+
+        $orders = Order::where('status', $status)->with('items')->get();
+        return response()->json($orders);
+    }
+
+    public function myOrders(Request $request)
+    {
+        $orders = $request->user()->orders()->with('items')->latest()->get();
+
+        return response()->json($orders);
+    }
+
 }
