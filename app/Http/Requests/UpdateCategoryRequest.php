@@ -11,8 +11,9 @@ class UpdateCategoryRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return $this->user()?->isAdmin();
     }
+
 
     /**
      * Get the validation rules that apply to the request.
