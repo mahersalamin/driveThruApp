@@ -8,11 +8,14 @@ use App\Models\Item;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Notifications\NewOrderPlaced;
+use App\Traits\ApiResponseTrait;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Request;
+use Illuminate\Http\Request;
 
 class OrderController extends Controller
 {
+    use ApiResponseTrait;
+
     public function index(Request $request)
     {
         $query = Order::with('items.item');
@@ -29,31 +32,35 @@ class OrderController extends Controller
             $query->where('name', 'like', "%{$request->name}%");
         }
 
-        return $query->orderByDesc('created_at')->get();
+        $orders = $query->orderByDesc('created_at')->get();
+        return $this->successResponse($orders);
     }
-
 
     public function show($id)
     {
-        return Order::with('items.item')->findOrFail($id);
+        $order = Order::with('items.item')->find($id);
+        return $order
+            ? $this->successResponse($order)
+            : $this->notFoundResponse('Order not found.');
     }
-
 
     public function store(StoreOrderRequest $request)
     {
-        return DB::transaction(function () use ($request) {
+        try {
             $validated = $request->validated();
 
             $total = 0;
             $orderItems = [];
-            foreach ($validated['items'] as $entry) {
-                $item = Item::findOrFail($entry['item_id']);
-                $sizeRecord = $item->sizes()->where('size', $entry['size'])->first();
 
-                if (!$sizeRecord) {
-                    return response()->json([
-                        'message' => "Invalid size '{$entry['size']}' for item ID {$item->id}."
-                    ], 422);
+            foreach ($validated['items'] as $entry) {
+                $item = Item::find($entry['item_id']);
+                if (! $item) {
+                    return $this->notFoundResponse("Item ID {$entry['item_id']} not found.");
+                }
+
+                $sizeRecord = $item->sizes()->where('size', $entry['size'])->first();
+                if (! $sizeRecord) {
+                    return $this->validationErrorResponse([], "Invalid size '{$entry['size']}' for item ID {$item->id}.");
                 }
 
                 $subtotal = $sizeRecord->price * $entry['quantity'];
@@ -67,57 +74,67 @@ class OrderController extends Controller
                 ];
             }
 
-            $order = Order::create([
-                'customer_id' => auth()->check() ? auth()->id() : null,
-                'name'        => $validated['name'] ?? null,
-                'mobile'      => $validated['mobile'] ?? null,
-                'note'        => $validated['note'] ?? null,
-                'total_price' => $total,
-            ]);
+            $order = DB::transaction(function () use ($validated, $orderItems, $total) {
+                $order = Order::create([
+                    'customer_id' => auth()->check() ? auth()->id() : null,
+                    'name'        => $validated['name'] ?? null,
+                    'mobile'      => $validated['mobile'] ?? null,
+                    'note'        => $validated['note'] ?? null,
+                    'total_price' => $total,
+                ]);
 
-            foreach ($orderItems as $orderItem) {
-                $order->items()->create($orderItem);
-            }
-            $admins = \App\Models\User::where('role', 'admin')->get();
-            foreach ($admins as $admin) {
-                $admin->notify(new NewOrderPlaced($order));
-            }
+                foreach ($orderItems as $orderItem) {
+                    $order->items()->create($orderItem);
+                }
 
-            return response()->json([
-                'message' => 'Order placed successfully',
+                // Notify all admins
+                $admins = \App\Models\User::where('role', 'admin')->get();
+                foreach ($admins as $admin) {
+                    $admin->notify(new NewOrderPlaced($order));
+                }
+
+                return $order;
+            });
+
+            return $this->successResponse([
                 'order_id' => $order->id,
-            ]);
-        });
+            ], 'Order placed successfully.', 201);
+
+        } catch (\Exception $e) {
+            return $this->errorResponse('Order placement failed.', 500, ['error' => $e->getMessage()]);
+        }
     }
 
     public function updateStatus(Request $request, $id)
     {
-        $request->validate([
+        $validated = $request->validate([
             'status' => 'required|in:pending,in_progress,completed,cancelled',
         ]);
 
-        $order = Order::findOrFail($id);
-        $order->status = $request->status;
+        $order = Order::find($id);
+        if (! $order) {
+            return $this->notFoundResponse();
+        }
+
+        $order->status = $validated['status'];
         $order->save();
 
-        return response()->json(['message' => 'Order status updated.']);
+        return $this->successResponse(null, 'Order status updated.');
     }
 
     public function filterByStatus($status)
     {
-        if (!in_array($status, ['pending', 'in_progress', 'completed', 'cancelled'])) {
-            return response()->json(['message' => 'Invalid status'], 400);
+        if (! in_array($status, ['pending', 'in_progress', 'completed', 'cancelled'])) {
+            return $this->validationErrorResponse([], 'Invalid status');
         }
 
-        $orders = Order::where('status', $status)->with('items')->get();
-        return response()->json($orders);
+        $orders = Order::where('status', $status)->with('items.item')->get();
+        return $this->successResponse($orders);
     }
 
     public function myOrders(Request $request)
     {
-        $orders = $request->user()->orders()->with('items')->latest()->get();
-
-        return response()->json($orders);
+        $orders = $request->user()->orders()->with('items.item')->latest()->get();
+        return $this->successResponse($orders);
     }
-
 }
