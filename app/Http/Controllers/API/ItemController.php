@@ -13,9 +13,11 @@ use Illuminate\Support\Facades\Storage;
 class ItemController extends Controller
 {
     use ApiResponseTrait;
+
     public function index()
     {
-        return $this->successResponse(Item::with('category','sizes')->get());
+        $items = Item::with('category', 'sizes')->get();
+        return $this->successResponse($items);
     }
 
     public function store(StoreItemRequest $request)
@@ -42,21 +44,45 @@ class ItemController extends Controller
         }
     }
 
-    public function update(Request $request, $id)
+    public function update(UpdateItemRequest $request, $id)
     {
         $item = Item::find($id);
-        if (! $item) return $this->notFoundResponse();
 
-        $item->update($request->only('name', 'category_id', 'image_path'));
+        if (! $item) {
+            return $this->notFoundResponse('Item not found.');
+        }
+
+        $data = $request->validated();
+
+        if ($request->hasFile('image')) {
+            // Optional: delete the old image if needed
+            if ($item->image_path) {
+                Storage::disk('public')->delete($item->image_path);
+            }
+
+            $data['image_path'] = $request->file('image')->store('items', 'public');
+        }
+
+        $item->update($data);
+
         return $this->successResponse($item, 'Item updated.');
     }
 
     public function destroy($id)
     {
         $item = Item::find($id);
-        if (! $item) return $this->notFoundResponse();
+
+        if (! $item) {
+            return $this->notFoundResponse('Item not found.');
+        }
+
+        // Optional: delete image file if exists
+        if ($item->image_path) {
+            Storage::disk('public')->delete($item->image_path);
+        }
 
         $item->delete();
+
         return $this->successResponse(null, 'Item deleted.');
     }
 }

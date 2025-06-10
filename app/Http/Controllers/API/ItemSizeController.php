@@ -6,34 +6,61 @@ use App\Http\Controllers\Controller;
 use App\Models\ItemSize;
 use App\Http\Requests\StoreItemSizeRequest;
 use App\Http\Requests\UpdateItemSizeRequest;
+use App\Traits\ApiResponseTrait;
 
 class ItemSizeController extends Controller
 {
+    use ApiResponseTrait;
+
     public function index()
     {
-        return ItemSize::with('item')->get();
+        $sizes = ItemSize::with('item')->get();
+        return $this->successResponse($sizes);
     }
 
     public function store(StoreItemSizeRequest $request)
     {
-        return ItemSize::create($request->validated());
+        $validated = $request->validated();
+
+        $size = ItemSize::create($validated);
+
+        return $this->successResponse($size, 'Size added.', 201);
     }
 
-    public function show(ItemSize $itemSize)
+    public function show($itemId)
     {
-        return $itemSize->load('item');
+        $sizes = ItemSize::where('item_id', $itemId)->get();
+
+        if ($sizes->isEmpty()) {
+            return $this->notFoundResponse('No sizes found for this item.');
+        }
+
+        return $this->successResponse($sizes);
     }
 
     public function update(UpdateItemSizeRequest $request, ItemSize $itemSize)
     {
-        $itemSize->update($request->validated());
-        return $itemSize;
+        if (! $itemSize) {
+            return $this->notFoundResponse('Size not found.');
+        }
+
+        $validated = $request->validated();
+
+        $itemSize->update($validated);
+
+        return $this->successResponse($itemSize, 'Size updated.');
     }
 
-    public function destroy(ItemSize $itemSize)
+    public function destroy($id)
     {
-        $itemSize->delete();
-        return response()->noContent();
+        $size = ItemSize::find($id);
+
+        if (! $size) {
+            return $this->notFoundResponse('Size not found.');
+        }
+
+        $size->delete();
+
+        return $this->successResponse(null, 'Size deleted.');
     }
 }
-

@@ -11,17 +11,16 @@ use App\Traits\ApiResponseTrait;
 class CategoryController extends Controller
 {
     use ApiResponseTrait;
+
     public function index()
     {
-        return $this->successResponse(Category::all(), 'Categories retrieved.');
+        $categories = Category::all();
+        return $this->successResponse($categories, 'Categories retrieved.');
     }
 
     public function store(StoreCategoryRequest $request)
     {
-        $request->validate(['name' => 'required|string|max:255']);
-
-        $category = Category::create($request->only('name', 'description'));
-
+        $category = Category::create($request->validated());
         return $this->successResponse($category, 'Category created.', 201);
     }
 
@@ -30,23 +29,32 @@ class CategoryController extends Controller
         $category = Category::find($id);
 
         return $category
-            ? $this->successResponse($category)
+            ? $this->successResponse($category, 'Category retrieved.')
             : $this->notFoundResponse('Category not found.');
     }
 
-    public function update(UpdateCategoryRequest $request, Category $category)
+    public function update(UpdateCategoryRequest $request, $id)
     {
-        if (!$category) return $this->notFoundResponse();
+        $category = Category::find($id);
 
-        $category->update($request->only('name', 'description'));
+        if (! $category) {
+            return $this->notFoundResponse('Category not found.');
+        }
+
+        $category->update($request->validated());
 
         return $this->successResponse($category, 'Category updated.');
     }
 
-    public function destroy(Category $category)
+    public function destroy($id)
     {
+        $category = Category::find($id);
+
+        if (! $category) {
+            return $this->notFoundResponse('Category not found.');
+        }
+
         $category->delete();
         return $this->successResponse(null, 'Category deleted.');
     }
 }
-

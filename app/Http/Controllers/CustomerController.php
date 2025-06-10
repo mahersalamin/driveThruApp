@@ -4,62 +4,79 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
+use App\Traits\ApiResponseTrait;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class CustomerController extends Controller
 {
+    use ApiResponseTrait;
+
     public function index()
     {
-        return User::orderBy('created_at', 'desc')->get();
+        $customers = User::orderBy('created_at', 'desc')->get();
+        return $this->successResponse($customers, 'Customers retrieved.');
     }
 
     public function show($id)
     {
-        return User::with('orders')->findOrFail($id);
+        try {
+            $customer = User::with('orders')->findOrFail($id);
+            return $this->successResponse($customer, 'Customer retrieved.');
+        } catch (ModelNotFoundException $e) {
+            return $this->notFoundResponse('Customer not found.');
+        }
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
-            'mobile' => 'nullable|string|max:20',
+            'name'     => 'required|string|max:255',
+            'email'    => 'required|email|unique:users,email',
+            'mobile'   => 'nullable|string|max:20',
             'password' => 'required|string|min:6|confirmed',
         ]);
 
         $validated['password'] = bcrypt($validated['password']);
+        $customer = User::create($validated);
 
-        $user = User::create($validated);
-
-        return response()->json($user, 201);
+        return $this->successResponse($customer, 'Customer created successfully.', 201);
     }
 
     public function update(Request $request, $id)
     {
-        $user = User::findOrFail($id);
+        try {
+            $customer = User::findOrFail($id);
 
-        $validated = $request->validate([
-            'name' => 'sometimes|required|string|max:255',
-            'email' => 'sometimes|required|email|unique:users,email,'.$id,
-            'mobile' => 'nullable|string|max:20',
-            'password' => 'nullable|string|min:6|confirmed',
-        ]);
+            $validated = $request->validate([
+                'name'     => 'sometimes|required|string|max:255',
+                'email'    => 'sometimes|required|email|unique:users,email,' . $id,
+                'mobile'   => 'nullable|string|max:20',
+                'password' => 'nullable|string|min:6|confirmed',
+            ]);
 
-        if (isset($validated['password'])) {
-            $validated['password'] = bcrypt($validated['password']);
-        } else {
-            unset($validated['password']);
+            if (isset($validated['password'])) {
+                $validated['password'] = bcrypt($validated['password']);
+            } else {
+                unset($validated['password']);
+            }
+
+            $customer->update($validated);
+
+            return $this->successResponse($customer, 'Customer updated successfully.');
+        } catch (ModelNotFoundException $e) {
+            return $this->notFoundResponse('Customer not found.');
         }
-
-        $user->update($validated);
-
-        return response()->json($user);
     }
 
     public function destroy($id)
     {
-        $user = User::findOrFail($id);
-        $user->delete();
+        try {
+            $customer = User::findOrFail($id);
+            $customer->delete();
 
-        return response()->json(['message' => 'Customer deleted']);
+            return $this->successResponse(null, 'Customer deleted successfully.');
+        } catch (ModelNotFoundException $e) {
+            return $this->notFoundResponse('Customer not found.');
+        }
     }
 }
