@@ -6,6 +6,7 @@ use App\Http\Controllers\API\ItemController;
 use App\Http\Controllers\API\ItemSizeController;
 use App\Http\Controllers\API\OrderController;
 use App\Http\Controllers\CustomerController;
+use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 
@@ -14,10 +15,14 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout']);
 Route::middleware('auth:sanctum')->get('/my-orders', [OrderController::class, 'myOrders']);
 
+Route::middleware('auth:sanctum')->get('/debug-user', function (Request $request) {
+    return [
+        'user' => $request->user(),
+        'auth_user' => auth()->user(),
+        'guards' => config('auth.guards'),
+    ];
+});
 
-Route::apiResource('categories', CategoryController::class);
-Route::apiResource('items', ItemController::class);
-Route::apiResource('item-sizes', ItemSizeController::class);
 
 Route::post('/orders', [OrderController::class, 'store']);
 Route::get('/admin/notifications', function () {
@@ -26,6 +31,10 @@ Route::get('/admin/notifications', function () {
 
 
 Route::middleware(['auth:sanctum', 'admin'])->group(function () {
+    Route::apiResource('categories', CategoryController::class);
+    Route::apiResource('items', ItemController::class);
+    Route::apiResource('item-sizes', ItemSizeController::class);
+
     Route::get('/orders', [OrderController::class, 'index']);
     Route::get('/orders/{id}', [OrderController::class, 'show']);
     Route::patch('/orders/{id}/status', [OrderController::class, 'updateStatus']);
