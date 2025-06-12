@@ -3,43 +3,55 @@
 @section('title', 'Pending & In Progress Orders')
 
 @section('content')
-    <h2>Pending & In Progress Orders</h2>
+    <div class="container">
+        <h2 style="color: #D32F2F; margin-bottom: 1rem;">Pending & In Progress Orders</h2>
 
-    <table>
-        <thead>
-        <tr>
-            <th>ID</th>
-            <th>Customer</th>
-            <th>Mobile</th>
-            <th>Total Price</th>
-            <th>Status</th>
-            <th>Placed At</th>
-            <th>Process Order</th>
-        </tr>
-        </thead>
-        <tbody>
-        @foreach ($orders as $order)
+        <table style="width: 100%; border-collapse: collapse; background-color: #fff8dc;">
+            <thead style="background-color: #FFD700; color: black;">
             <tr>
-                <td>{{ $order->id }}</td>
-                <td>{{ $order->name }}</td>
-                <td>{{ $order->mobile }}</td>
-                <td>${{ number_format($order->total_price, 2) }}</td>
-                <td>{{ ucfirst($order->status) }}</td>
-                <td>{{ $order->created_at->format('Y-m-d H:i') }}</td>
-                <td>
-                    <form method="POST" action="{{ route('admin.orders.process', $order) }}">
-                        @csrf
-                        <select name="status" required>
-                            <option value="pending" {{ $order->status === 'pending' ? 'selected' : '' }}>Pending</option>
-                            <option value="in_progress" {{ $order->status === 'in_progress' ? 'selected' : '' }}>In Progress</option>
-                            <option value="completed">Completed</option>
-                            <option value="cancelled">Cancelled</option>
-                        </select>
-                        <button type="submit">Update</button>
-                    </form>
-                </td>
+                <th style="padding: 0.5rem; border: 1px solid black;">ID</th>
+                <th style="padding: 0.5rem; border: 1px solid black;">Customer</th>
+                <th style="padding: 0.5rem; border: 1px solid black;">Mobile</th>
+                <th style="padding: 0.5rem; border: 1px solid black;">Total Price</th>
+                <th style="padding: 0.5rem; border: 1px solid black;">Status</th>
+                <th style="padding: 0.5rem; border: 1px solid black;">Placed At</th>
+                <th style="padding: 0.5rem; border: 1px solid black;">Process</th>
             </tr>
-        @endforeach
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+            @forelse ($orders as $order)
+                <tr style="border-bottom: 1px solid #000;">
+                    <td style="padding: 0.5rem; border: 1px solid black;">{{ $order->id }}</td>
+                    <td style="padding: 0.5rem; border: 1px solid black;">{{ $order->name }}</td>
+                    <td style="padding: 0.5rem; border: 1px solid black;">{{ $order->mobile }}</td>
+                    <td style="padding: 0.5rem; border: 1px solid black;">${{ number_format($order->total_price, 2) }}</td>
+                    <td style="padding: 0.5rem; border: 1px solid black;">{{ ucfirst($order->status) }}</td>
+                    <td style="padding: 0.5rem; border: 1px solid black;">{{ $order->created_at->format('Y-m-d H:i') }}</td>
+                    <td style="padding: 0.5rem; border: 1px solid black;">
+                        <form method="POST" action="{{ route('admin.orders.process', $order) }}" style="display: flex; gap: 0.5rem; align-items: center;">
+                            @csrf
+                            <select name="status" style="padding: 0.25rem;">
+                                <option value="pending" {{ $order->status === 'pending' ? 'selected' : '' }}>Pending</option>
+                                <option value="in_progress" {{ $order->status === 'in_progress' ? 'selected' : '' }}>In Progress</option>
+                                <option value="completed">Completed</option>
+                                <option value="cancelled">Cancelled</option>
+                            </select>
+                            <button type="submit" style="background-color: #D32F2F; color: white; border: none; padding: 0.25rem 0.5rem; border-radius: 4px;">Update</button>
+                        </form>
+                    </td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="7" style="text-align: center; padding: 1rem;">No orders found.</td>
+                </tr>
+            @endforelse
+            </tbody>
+        </table>
+
+        <div style="margin-top: 20px; font-size: 14px;">
+            <div style="display: inline-block;">
+                {{ $orders->onEachSide(1)->links('components.pagination.small') }}
+            </div>
+        </div>
+    </div>
 @endsection

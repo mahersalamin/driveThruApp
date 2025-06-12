@@ -3,40 +3,46 @@
 @section('title', 'All Orders')
 
 @section('content')
-    <h2>All Orders</h2>
+    <div class="container">
+        <h2 style="color: #D32F2F; margin-bottom: 1rem;">All Orders</h2>
 
-    <table>
-        <thead>
-        <tr>
-            <th>ID</th>
-            <th>Customer</th>
-            <th>Mobile</th>
-            <th>Total Price</th>
-            <th>Status</th>
-            <th>Placed At</th>
-            <th>Actions</th>
-        </tr>
-        </thead>
-        <tbody>
-        @foreach ($orders as $order)
+        <table style="width: 100%; border-collapse: collapse; background-color: #fff8dc;">
+            <thead style="background-color: #FFD700; color: black;">
             <tr>
-                <td>{{ $order->id }}</td>
-                <td>{{ $order->name }}</td>
-                <td>{{ $order->mobile }}</td>
-                <td>${{ number_format($order->total_price, 2) }}</td>
-                <td>{{ ucfirst($order->status) }}</td>
-                <td>{{ $order->created_at->format('Y-m-d H:i') }}</td>
-                <td>
-                    <a href="{{ route('admin.orders.show', $order) }}">View</a>
-                </td>
+                <th style="padding: 0.5rem; border: 1px solid black;">ID</th>
+                <th style="padding: 0.5rem; border: 1px solid black;">Customer</th>
+                <th style="padding: 0.5rem; border: 1px solid black;">Mobile</th>
+                <th style="padding: 0.5rem; border: 1px solid black;">Total Price</th>
+                <th style="padding: 0.5rem; border: 1px solid black;">Status</th>
+                <th style="padding: 0.5rem; border: 1px solid black;">Placed At</th>
+                <th style="padding: 0.5rem; border: 1px solid black;">Actions</th>
             </tr>
-        @endforeach
-        </tbody>
-    </table>
-    <div style="margin-top: 20px; font-size: 14px;">
-        <div style="display: inline-block;">
-            {{ $orders->onEachSide(1)->links('components.pagination.small') }}
+            </thead>
+            <tbody>
+            @forelse ($orders as $order)
+                <tr style="border-bottom: 1px solid #000;">
+                    <td style="padding: 0.5rem; border: 1px solid black;">{{ $order->id }}</td>
+                    <td style="padding: 0.5rem; border: 1px solid black;">{{ $order->name }}</td>
+                    <td style="padding: 0.5rem; border: 1px solid black;">{{ $order->mobile }}</td>
+                    <td style="padding: 0.5rem; border: 1px solid black;">${{ number_format($order->total_price, 2) }}</td>
+                    <td style="padding: 0.5rem; border: 1px solid black;">{{ ucfirst($order->status) }}</td>
+                    <td style="padding: 0.5rem; border: 1px solid black;">{{ $order->created_at->format('Y-m-d H:i') }}</td>
+                    <td style="padding: 0.5rem; border: 1px solid black;">
+                        <a href="{{ route('admin.orders.show', $order) }}" style="color: #D32F2F; text-decoration: underline;">View</a>
+                    </td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="7" style="text-align: center; padding: 1rem;">No orders found.</td>
+                </tr>
+            @endforelse
+            </tbody>
+        </table>
+
+        <div style="margin-top: 20px; font-size: 14px;">
+            <div style="display: inline-block;">
+                {{ $orders->onEachSide(1)->links('components.pagination.small') }}
+            </div>
         </div>
     </div>
-
 @endsection
