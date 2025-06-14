@@ -1,25 +1,25 @@
 @extends('layouts.admin')
 
-@section('title', 'Order Details')
+@section('title', 'معلومات الطلب')
 
 @section('content')
-    <h2>Order #{{ $order->id }} Details</h2>
+    <h2>معلومات #{{ $order->id }} طلب</h2>
 
-    <p><strong>Customer:</strong> {{ $order->name }}</p>
-    <p><strong>Mobile:</strong> {{ $order->mobile }}</p>
-    <p><strong>Status:</strong> {{ ucfirst($order->status) }}</p>
-    <p><strong>Note:</strong> {{ $order->note ?? 'N/A' }}</p>
-    <p><strong>Total Price:</strong> ${{ number_format($order->total_price, 2) }}</p>
-    <p><strong>Placed At:</strong> {{ $order->created_at->format('Y-m-d H:i') }}</p>
+    <p><strong>الزبون:</strong> {{ $order->name }}</p>
+    <p><strong>الهاتف:</strong> {{ $order->mobile }}</p>
+    <p><strong>الحالة:</strong> {{ ucfirst($order->status) }}</p>
+    <p><strong>ملاحظات:</strong> {{ $order->note ?? 'N/A' }}</p>
+    <p><strong>السعر الكلي:</strong> ${{ number_format($order->total_price, 2) }}</p>
+    <p><strong>وقت الطلب:</strong> {{ $order->created_at->format('Y-m-d H:i') }}</p>
 
-    <h3>Items</h3>
+    <h3>الأصناف</h3>
     <table>
         <thead>
         <tr>
-            <th>Item Name</th>
-            <th>Size</th>
-            <th>Price</th>
-            <th>Quantity</th>
+            <th>اسم الصنف</th>
+            <th>الحجم</th>
+            <th>السعر</th>
+            <th>الكمية</th>
         </tr>
         </thead>
         <tbody>
@@ -34,5 +34,5 @@
         </tbody>
     </table>
 
-    <a href="{{ route('admin.orders.index') }}">Back to all orders</a>
+    <a href="{{ route('admin.orders.index') }}">الرجوع لكل الطلبات</a>
 @endsection

@@ -1,21 +1,21 @@
 @extends('layouts.admin')
 
-@section('title', 'Pending & In Progress Orders')
+@section('title', 'طلبات قيد الانتظار او جارية')
 
 @section('content')
     <div class="container">
-        <h2 style="color: #D32F2F; margin-bottom: 1rem;">Pending & In Progress Orders</h2>
+        <h2 style="color: #D32F2F; margin-bottom: 1rem;">الطلبات المعلقة والجارية</h2>
 
         <table style="width: 100%; border-collapse: collapse; background-color: #fff8dc;">
             <thead style="background-color: #FFD700; color: black;">
             <tr>
-                <th style="padding: 0.5rem; border: 1px solid black;">ID</th>
-                <th style="padding: 0.5rem; border: 1px solid black;">Customer</th>
-                <th style="padding: 0.5rem; border: 1px solid black;">Mobile</th>
-                <th style="padding: 0.5rem; border: 1px solid black;">Total Price</th>
-                <th style="padding: 0.5rem; border: 1px solid black;">Status</th>
-                <th style="padding: 0.5rem; border: 1px solid black;">Placed At</th>
-                <th style="padding: 0.5rem; border: 1px solid black;">Process</th>
+                <th style="padding: 0.5rem; border: 1px solid black;">الرقم</th>
+                <th style="padding: 0.5rem; border: 1px solid black;">الزبون</th>
+                <th style="padding: 0.5rem; border: 1px solid black;">الهاتف</th>
+                <th style="padding: 0.5rem; border: 1px solid black;">السعر الكلي</th>
+                <th style="padding: 0.5rem; border: 1px solid black;">الحالة</th>
+                <th style="padding: 0.5rem; border: 1px solid black;">وقت الطلب</th>
+                <th style="padding: 0.5rem; border: 1px solid black;">معالجة الطلب</th>
             </tr>
             </thead>
             <tbody>
@@ -24,25 +24,46 @@
                     <td style="padding: 0.5rem; border: 1px solid black;">{{ $order->id }}</td>
                     <td style="padding: 0.5rem; border: 1px solid black;">{{ $order->name }}</td>
                     <td style="padding: 0.5rem; border: 1px solid black;">{{ $order->mobile }}</td>
-                    <td style="padding: 0.5rem; border: 1px solid black;">${{ number_format($order->total_price, 2) }}</td>
-                    <td style="padding: 0.5rem; border: 1px solid black;">{{ ucfirst($order->status) }}</td>
+                    <td style="padding: 0.5rem; border: 1px solid black;">₪{{ number_format($order->total_price, 2) }}</td>
+                    <td style="padding: 0.5rem; border: 1px solid black;">
+                        @switch($order->status)
+                            @case('pending')
+                                <span style="color: orange; font-weight: bold;">قيد الانتظار</span>
+                                @break
+
+                            @case('in_progress')
+                                <span style="color: blue; font-weight: bold;">جاري العمل عليه</span>
+                                @break
+
+                            @case('completed')
+                                <span style="color: teal; font-weight: bold;">مكتمل</span>
+                                @break
+
+                            @case('cancelled')
+                                <span style="color: red; font-weight: bold;">ملغي</span>
+                                @break
+
+                            @default
+                                {{ ucfirst($order->status) }}
+                        @endswitch
+                    </td>
                     <td style="padding: 0.5rem; border: 1px solid black;">{{ $order->created_at->format('Y-m-d H:i') }}</td>
                     <td style="padding: 0.5rem; border: 1px solid black;">
                         <form method="POST" action="{{ route('admin.orders.process', $order) }}" style="display: flex; gap: 0.5rem; align-items: center;">
                             @csrf
                             <select name="status" style="padding: 0.25rem;">
-                                <option value="pending" {{ $order->status === 'pending' ? 'selected' : '' }}>Pending</option>
-                                <option value="in_progress" {{ $order->status === 'in_progress' ? 'selected' : '' }}>In Progress</option>
-                                <option value="completed">Completed</option>
-                                <option value="cancelled">Cancelled</option>
+                                <option value="pending" {{ $order->status === 'pending' ? 'selected' : '' }}>قيد الانتظار</option>
+                                <option value="in_progress" {{ $order->status === 'in_progress' ? 'selected' : '' }}>جاري العمل عليه</option>
+                                <option value="completed">مكتمل</option>
+                                <option value="cancelled">ملغي</option>
                             </select>
-                            <button type="submit" style="background-color: #D32F2F; color: white; border: none; padding: 0.25rem 0.5rem; border-radius: 4px;">Update</button>
+                            <button type="submit" style="background-color: #D32F2F; color: white; border: none; padding: 0.25rem 0.5rem; border-radius: 4px;">تحديث</button>
                         </form>
                     </td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="7" style="text-align: center; padding: 1rem;">No orders found.</td>
+                    <td colspan="7" style="text-align: center; padding: 1rem;">لا توجد أي طلبات.</td>
                 </tr>
             @endforelse
             </tbody>

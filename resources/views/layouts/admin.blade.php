@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>@yield('title', 'Admin Panel')</title>
+    <title>@yield('title', 'لوحة المسؤول')</title>
     <style>
         body {
             background-color: #FFD700; /* Yellow background */
@@ -58,20 +58,132 @@
 </head>
 <body>
 <header>
-    <h1>Admin Dashboard</h1>
+    <h1>لوحة المسؤول</h1>
     <nav>
-        <a href="{{ route('admin.dashboard') }}">Dashboard</a>
-        <a href="{{ route('admin.orders.index') }}">All Orders</a>
-        <a href="{{ route('admin.orders.pending') }}">Pending & In Progress</a>
+        <a href="{{ route('admin.dashboard') }}">الرئيسية</a>
+        <a href="{{ route('admin.orders.index') }}">كل الطلبات</a>
+        <a href="{{ route('admin.orders.pending') }}">طلبات معلقة وجارية</a>
         <form style="display:inline" method="POST" action="{{ route('admin.logout') }}">
             @csrf
-            <button type="submit">Logout</button>
+            <button type="submit">تسجيل الخروج</button>
         </form>
+        <a href="{{ route('admin.notifications') }}" style="position: relative;">
+            🛎️
+            @auth
+                <span id="notification-count"
+                      style="position: absolute; top: -5px; right: -10px; background-color: red; color: white;
+                 border-radius: 50%; padding: 2px 6px; font-size: 12px; display: {{ auth()->user()->unreadNotifications->count() > 0 ? 'inline-block' : 'none' }};">
+                    {{ auth()->user()->unreadNotifications->count() }}
+                </span>
+            @endauth
+
+        </a>
+
     </nav>
 </header>
+<div id="toast" style="
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    background-color: #FFD700;
+    color: #000;
+    padding: 15px 20px;
+    border-left: 6px solid #D32F2F;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    border-radius: 5px;
+    z-index: 10000;
+    display: none;
+    min-width: 250px;
+">
+    <div id="toast-message" style="margin-bottom: 10px;"></div>
+    <a id="toast-link" href="#" style="
+        background-color: #D32F2F;
+        color: #fff;
+        padding: 6px 12px;
+        text-decoration: none;
+        border-radius: 3px;
+        font-size: 14px;
+    ">عرض الطلب</a>
+</div>
 
 <main>
     @yield('content')
 </main>
 </body>
 </html>
+
+@auth
+    <script>
+        let notificationCount = {{ auth()->user()->unreadNotifications->count() }};
+    </script>
+@else
+    <script>
+        let notificationCount = 0;
+    </script>
+@endauth
+
+<script>
+    let lastNotificationId = null;
+    let notifyAudio = new Audio('/sounds/notify.mp3');
+    let canPlaySound = true;
+
+    function playNotificationSound() {
+        if (canPlaySound) {
+            notifyAudio.currentTime = 0;
+            notifyAudio.autoplay = true;
+            notifyAudio.play();
+
+        }
+
+    }
+
+    function showToast(message, linkUrl, notificationId) {
+        const toast = document.getElementById('toast');
+        const messageDiv = document.getElementById('toast-message');
+        const link = document.getElementById('toast-link');
+
+        messageDiv.textContent = message;
+        link.href = linkUrl + `?notify=${notificationId}`;
+        toast.style.display = 'block';
+
+        setTimeout(() => {
+            toast.style.display = 'none';
+        }, 8000);
+    }
+
+    function updateNotificationCountUI(count) {
+        const badge = document.getElementById('notification-count');
+        if (badge) {
+            badge.innerText = count;
+            badge.style.display = count > 0 ? 'inline-block' : 'none';
+        }
+    }
+
+    setInterval(() => {
+        fetch('{{ route("admin.notifications.count") }}')
+            .then(response => response.json())
+            .then(data => {
+                if (data.count > notificationCount) {
+                    fetch('{{ route("admin.notifications.latest") }}')
+                        .then(res => res.json())
+                        .then(notification => {
+                            const orderId = notification.data.order_id;
+                            const price = notification.data.total_price;
+                            const notificationId = notification.id;
+
+                            if (notificationId !== lastNotificationId) {
+                                showToast(`طلب جديد ${orderId} السعر: ${price}`, `/orders/${orderId}`, notificationId);
+                                playNotificationSound();
+                                lastNotificationId = notificationId;
+                            }
+                        });
+
+                    updateNotificationCountUI(data.count);
+                }
+
+                notificationCount = data.count;
+            });
+    }, 5000);
+</script>
+
+
