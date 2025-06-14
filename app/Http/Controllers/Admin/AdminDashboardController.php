@@ -10,6 +10,8 @@ class AdminDashboardController extends Controller
 {
     public function index()
     {
+        $notifications = auth()->user()->notifications()->latest()->take(10)->get();
+
         $totalOrders = Order::count();
         $totalSales = Order::sum('total_price');
         $pendingOrders = Order::where('status', 'pending')->count();
@@ -21,7 +23,7 @@ class AdminDashboardController extends Controller
             ->limit(5)
             ->get();
 
-        return view('admin.dashboard', compact('totalOrders', 'totalSales', 'pendingOrders', 'topItems'));
+        return view('admin.dashboard', compact('totalOrders', 'totalSales', 'pendingOrders', 'topItems','notifications'));
     }
 }
 
