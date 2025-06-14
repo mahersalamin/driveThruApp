@@ -34,4 +34,39 @@ class AdminController extends Controller
 
         return $this->successResponse($data, 'Dashboard data retrieved successfully.');
     }
+
+    public function notifications()
+    {
+        $notifications = auth()->user()->notifications()->latest()->paginate(10);
+        return view('admin.notifications.index', compact('notifications'));
+    }
+
+    public function markAllNotificationsRead()
+    {
+        auth()->user()->unreadNotifications->markAsRead();
+        return redirect()->route('admin.notifications')->with('success', 'All notifications marked as read.');
+    }
+
+    public function show(Order $order, Request $request)
+    {
+        if ($request->has('notify')) {
+            auth()->user()
+                ->unreadNotifications()
+                ->where('id', $request->get('notify'))
+                ->first()?->markAsRead();
+        }
+
+        return view('admin.orders.show', compact('order'));
+    }
+
+    public function latest()
+    {
+        $notification = auth()->user()->unreadNotifications()->latest()->first();
+
+        if ($notification) {
+            return response()->json($notification);
+        }
+
+        return response()->json(null, 404);
+    }
 }
