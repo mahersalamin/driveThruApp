@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>@yield('title', 'Admin Panel')</title>
+    <title>@yield('title', 'لوحة المسؤول')</title>
     <style>
         body {
             background-color: #FFD700; /* Yellow background */
@@ -58,14 +58,14 @@
 </head>
 <body>
 <header>
-    <h1>Admin Dashboard</h1>
+    <h1>لوحة المسؤول</h1>
     <nav>
-        <a href="{{ route('admin.dashboard') }}">Dashboard</a>
-        <a href="{{ route('admin.orders.index') }}">All Orders</a>
-        <a href="{{ route('admin.orders.pending') }}">Pending & In Progress</a>
+        <a href="{{ route('admin.dashboard') }}">الرئيسية</a>
+        <a href="{{ route('admin.orders.index') }}">كل الطلبات</a>
+        <a href="{{ route('admin.orders.pending') }}">طلبات معلقة وجارية</a>
         <form style="display:inline" method="POST" action="{{ route('admin.logout') }}">
             @csrf
-            <button type="submit">Logout</button>
+            <button type="submit">تسجيل الخروج</button>
         </form>
     </nav>
 </header>
