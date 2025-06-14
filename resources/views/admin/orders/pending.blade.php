@@ -1,10 +1,10 @@
 @extends('layouts.admin')
 
-@section('title', 'Pending & In Progress Orders')
+@section('title', 'طلبات قيد الانتظار او جارية')
 
 @section('content')
     <div class="container">
-        <h2 style="color: #D32F2F; margin-bottom: 1rem;">الطلبات المكعلقة والجارية</h2>
+        <h2 style="color: #D32F2F; margin-bottom: 1rem;">الطلبات المعلقة والجارية</h2>
 
         <table style="width: 100%; border-collapse: collapse; background-color: #fff8dc;">
             <thead style="background-color: #FFD700; color: black;">
@@ -24,8 +24,29 @@
                     <td style="padding: 0.5rem; border: 1px solid black;">{{ $order->id }}</td>
                     <td style="padding: 0.5rem; border: 1px solid black;">{{ $order->name }}</td>
                     <td style="padding: 0.5rem; border: 1px solid black;">{{ $order->mobile }}</td>
-                    <td style="padding: 0.5rem; border: 1px solid black;">${{ number_format($order->total_price, 2) }}</td>
-                    <td style="padding: 0.5rem; border: 1px solid black;">{{ ucfirst($order->status) }}</td>
+                    <td style="padding: 0.5rem; border: 1px solid black;">₪{{ number_format($order->total_price, 2) }}</td>
+                    <td style="padding: 0.5rem; border: 1px solid black;">
+                        @switch($order->status)
+                            @case('pending')
+                                <span style="color: orange; font-weight: bold;">قيد الانتظار</span>
+                                @break
+
+                            @case('in_progress')
+                                <span style="color: blue; font-weight: bold;">جاري العمل عليه</span>
+                                @break
+
+                            @case('completed')
+                                <span style="color: teal; font-weight: bold;">مكتمل</span>
+                                @break
+
+                            @case('cancelled')
+                                <span style="color: red; font-weight: bold;">ملغي</span>
+                                @break
+
+                            @default
+                                {{ ucfirst($order->status) }}
+                        @endswitch
+                    </td>
                     <td style="padding: 0.5rem; border: 1px solid black;">{{ $order->created_at->format('Y-m-d H:i') }}</td>
                     <td style="padding: 0.5rem; border: 1px solid black;">
                         <form method="POST" action="{{ route('admin.orders.process', $order) }}" style="display: flex; gap: 0.5rem; align-items: center;">

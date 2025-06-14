@@ -24,11 +24,11 @@
                     <td style="padding: 0.5rem; border: 1px solid black;">{{ $order->id }}</td>
                     <td style="padding: 0.5rem; border: 1px solid black;">{{ $order->name }}</td>
                     <td style="padding: 0.5rem; border: 1px solid black;">{{ $order->mobile }}</td>
-                    <td style="padding: 0.5rem; border: 1px solid black;">${{ number_format($order->total_price, 2) }}</td>
+                    <td style="padding: 0.5rem; border: 1px solid black;">₪{{ number_format($order->total_price, 2) }}</td>
                     <td style="padding: 0.5rem; border: 1px solid black;">
                         @switch($order->status)
                             @case('pending')
-                                <span style="color: orange; font-weight: bold;">معلق</span>
+                                <span style="color: orange; font-weight: bold;">قيد الانتظار</span>
                                 @break
 
                             @case('in_progress')
@@ -41,7 +41,6 @@
 
                             @case('cancelled')
                                 <span style="color: red; font-weight: bold;">ملغي</span>
-                                {{-- <i class="fas fa-times-circle"></i> --}}
                                 @break
 
                             @default

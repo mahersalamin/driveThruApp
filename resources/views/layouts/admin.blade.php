@@ -69,11 +69,14 @@
         </form>
         <a href="{{ route('admin.notifications') }}" style="position: relative;">
             🛎️
-            <span id="notification-count"
-                  style="position: absolute; top: -5px; right: -10px; background-color: red; color: white;
+            @auth
+                <span id="notification-count"
+                      style="position: absolute; top: -5px; right: -10px; background-color: red; color: white;
                  border-radius: 50%; padding: 2px 6px; font-size: 12px; display: {{ auth()->user()->unreadNotifications->count() > 0 ? 'inline-block' : 'none' }};">
-        {{ auth()->user()->unreadNotifications->count() }}
-    </span>
+                    {{ auth()->user()->unreadNotifications->count() }}
+                </span>
+            @endauth
+
         </a>
 
     </nav>
@@ -81,7 +84,7 @@
 <div id="toast" style="
     position: fixed;
     top: 20px;
-    right: 20px;
+    left: 20px;
     background-color: #FFD700;
     color: #000;
     padding: 15px 20px;
@@ -100,7 +103,7 @@
         text-decoration: none;
         border-radius: 3px;
         font-size: 14px;
-    ">View Order</a>
+    ">عرض الطلب</a>
 </div>
 
 <main>
@@ -109,23 +112,29 @@
 </body>
 </html>
 
-<script>
-    let notificationCount = {{ auth()->user()->unreadNotifications->count() }};
-    let notifyAudio = new Audio('/sounds/notify.mp3');
-    let canPlaySound = false;
+@auth
+    <script>
+        let notificationCount = {{ auth()->user()->unreadNotifications->count() }};
+    </script>
+@else
+    <script>
+        let notificationCount = 0;
+    </script>
+@endauth
 
-    // Allow sound after interaction
-    window.addEventListener('click', () => {
-        if (!canPlaySound) {
-            notifyAudio.play().then(() => canPlaySound = true).catch(() => canPlaySound = true);
-        }
-    });
+<script>
+    let lastNotificationId = null;
+    let notifyAudio = new Audio('/sounds/notify.mp3');
+    let canPlaySound = true;
 
     function playNotificationSound() {
         if (canPlaySound) {
             notifyAudio.currentTime = 0;
+            notifyAudio.autoplay = true;
             notifyAudio.play();
+
         }
+
     }
 
     function showToast(message, linkUrl, notificationId) {
@@ -142,7 +151,6 @@
         }, 8000);
     }
 
-
     function updateNotificationCountUI(count) {
         const badge = document.getElementById('notification-count');
         if (badge) {
@@ -156,7 +164,6 @@
             .then(response => response.json())
             .then(data => {
                 if (data.count > notificationCount) {
-                    // fetch the latest unread notification
                     fetch('{{ route("admin.notifications.latest") }}')
                         .then(res => res.json())
                         .then(notification => {
@@ -164,16 +171,19 @@
                             const price = notification.data.total_price;
                             const notificationId = notification.id;
 
-                            showToast(`🛒 New Order #${orderId} placed ($${price})`, `/orders/${orderId}`, notificationId);
-                            playNotificationSound();
+                            if (notificationId !== lastNotificationId) {
+                                showToast(`طلب جديد ${orderId} السعر: ${price}`, `/orders/${orderId}`, notificationId);
+                                playNotificationSound();
+                                lastNotificationId = notificationId;
+                            }
                         });
-
 
                     updateNotificationCountUI(data.count);
                 }
+
                 notificationCount = data.count;
             });
-    }, 15000);
+    }, 5000);
 </script>
 
 

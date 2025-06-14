@@ -44,7 +44,7 @@ class AdminController extends Controller
     public function markAllNotificationsRead()
     {
         auth()->user()->unreadNotifications->markAsRead();
-        return redirect()->route('admin.notifications')->with('success', 'All notifications marked as read.');
+        return redirect()->route('admin.notifications')->with('success', 'تم التعيين كمقروء');
     }
 
     public function show(Order $order, Request $request)

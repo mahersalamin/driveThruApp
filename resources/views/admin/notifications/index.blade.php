@@ -1,10 +1,10 @@
 @extends('layouts.admin')
 
-@section('title', 'Notifications')
+@section('title', 'الإشعارات')
 
 @section('content')
     <div class="container">
-        <h2 style="color: var(--red); margin-bottom: 1rem;">🔔 Notifications</h2>
+        <h2 style="color: var(--red); margin-bottom: 1rem;">🔔 الإشعارات</h2>
 
         @if(session('success'))
             <div style="background: var(--yellow); padding: 10px; border-left: 4px solid var(--red); margin-bottom: 1rem;">
@@ -18,7 +18,7 @@
             <form method="POST" action="{{ route('admin.notifications.markAllRead') }}" style="margin-bottom: 1.5rem;">
                 @csrf
                 <button type="submit" style="background: var(--red); color: white; padding: 8px 12px; border: none; cursor: pointer; border-radius: 4px;">
-                    Mark all as read
+                    تعيين الكل كمقروء
                 </button>
             </form>
 
@@ -34,10 +34,9 @@
                         font-weight: {{ $notification->read_at ? 'normal' : 'bold' }};
                         color: var(--black);
                     ">
-                        📦 Order #{{ $notification->data['order_id'] }} —
-                        ${{ number_format($notification->data['total_price'], 2) }} —
-                        <span>Status: {{ ucfirst($notification->data['status']) }}</span> —
-                        <small>{{ \Carbon\Carbon::parse($notification->data['placed_at'])->diffForHumans() }}</small>
+                        📦 رقم الطلب #{{ $notification->data['order_id'] }} —
+                        السعر ₪{{ number_format($notification->data['total_price'], 2) }} —
+                        <small> وقت الطلب {{ \Carbon\Carbon::parse($notification->data['placed_at'])->diffForHumans() }}</small>
                     </li>
                 @endforeach
             </ul>
