@@ -76,7 +76,7 @@ class OrderController extends Controller
 
             $order = DB::transaction(function () use ($validated, $orderItems, $total) {
                 $order = Order::create([
-                    'customer_id' => auth()->check() ? auth()->id() : null,
+                    'customer_id' => $validated['customer_id'] ?? null,
                     'name'        => $validated['name'] ?? null,
                     'mobile'      => $validated['mobile'] ?? null,
                     'note'        => $validated['note'] ?? null,
