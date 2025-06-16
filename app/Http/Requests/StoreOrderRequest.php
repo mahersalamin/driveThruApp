@@ -31,6 +31,7 @@ class StoreOrderRequest extends FormRequest
             'items.*.item_id'  => 'required|exists:items,id',
             'items.*.size'     => 'required|string',
             'items.*.quantity' => 'required|integer|min:1',
+            'customer_id' => 'nullable|exists:users,id',
         ];
     }
 }
