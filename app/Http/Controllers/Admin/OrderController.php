@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Notifications\OrderStatusChanged;
 use Illuminate\Http\Request;
 use App\Traits\ApiResponseTrait;
 

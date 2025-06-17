@@ -7,6 +7,8 @@ use App\Http\Controllers\API\ItemSizeController;
 use App\Http\Controllers\API\OrderController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\AuthController;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 
 // Public Routes (No authentication required)
@@ -24,20 +26,24 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/my-orders', [OrderController::class, 'myOrders']);
 
+    Route::get('/notifications', function (Request $request) {
+        return response()->json([
+            'success' => true,
+            'data' => $request->user()->notifications
+        ]);
+    });
+    Route::post('/notifications/{id}/read', function ($id, Request $request) {
+        $notification = $request->user()->notifications()->findOrFail($id);
+        $notification->markAsRead();
+
+        return response()->json(['success' => true]);
+    });
 
     // Admin Routes (Requires 'auth:sanctum' and 'admin' middleware)
     Route::middleware('admin')->prefix('admin')->group(function () {
         Route::get('/dashboard', [AdminController::class, 'dashboard']);
 
         // Admin notifications
-        Route::get('/notifications', function () {
-            return auth()->user()->notifications;
-        });
-        Route::post('/notifications/{id}/read', function ($id) {
-            $notification = auth()->user()->notifications()->findOrFail($id);
-            $notification->markAsRead();
-            return response()->json(['message' => 'Notification marked as read']);
-        });
 
         // Orders management
         Route::get('/orders', [OrderController::class, 'index']);

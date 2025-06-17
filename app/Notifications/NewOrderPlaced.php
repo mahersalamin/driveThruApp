@@ -23,7 +23,7 @@ class NewOrderPlaced extends Notification
         return [
             'order_id' => $this->order->id,
             'total_price' => $this->order->total_price,
-            'status' => $this->order->status,
+            'status' => $this->order->status ?? 'pending',
             'placed_at' => $this->order->created_at,
         ];
     }

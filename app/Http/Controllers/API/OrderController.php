@@ -80,6 +80,7 @@ class OrderController extends Controller
                     'name'        => $validated['name'] ?? null,
                     'mobile'      => $validated['mobile'] ?? null,
                     'note'        => $validated['note'] ?? null,
+                    'status'      => 'pending',
                     'total_price' => $total,
                 ]);
 
@@ -91,6 +92,12 @@ class OrderController extends Controller
                 $admins = \App\Models\User::where('role', 'admin')->get();
                 foreach ($admins as $admin) {
                     $admin->notify(new NewOrderPlaced($order));
+                }
+                if ($order->customer_id) {
+                    $user = \App\Models\User::find($order->customer_id);
+                    if ($user) {
+                        $user->notify(new NewOrderPlaced($order));
+                    }
                 }
 
                 return $order;
